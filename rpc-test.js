@@ -7,6 +7,10 @@ const rpc = (function () {
     let _callbacks = {};
     let _fetchConfig = {};
 
+    /**
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+     * @type {{mode: string, redirect: string, headers: {"Content-Type": string}, referrer: string, cache: string, method: string, credentials: string, body: string}}
+     */
     const defaultFetchConfig = {
         method: "POST", // *GET, POST, PUT, DELETE, etc.
         mode: "cors", // no-cors, cors, *same-origin
@@ -58,10 +62,10 @@ const rpc = (function () {
         const cfg = Object.assign({}, defaultFetchConfig, _fetchConfig, config);
         if (cfg.method.toLowerCase() !== 'get') {
             cfg.body = JSON.stringify(makeRequestBody());
-            makeCallbacks();
         } else {
             delete cfg.body;
         }
+        makeCallbacks();
         return cfg;
     };
 
@@ -69,19 +73,25 @@ const rpc = (function () {
      *
      * @param {String} endpoint
      * @param {Object} [config]
+     * @return {Promise<unknown>}
      */
     const send = (endpoint, config) => {
         console.log('send', _requests, _callbacks);
         const cfg = makeFetchConfig(config);
-        const response = fetch(endpoint, cfg).then(res => res.json());
-        response.then(value => {
-            console.log('then');
-            parseSendResponse(value);
-        }).catch(reason => {
-            console.log('catch')
-            parseSendError(reason);
-        }).finally(() => {
-            clearRequest();
+        return new Promise((resolve, reject) => {
+            fetch(endpoint, cfg)
+                .then(res => res.json())
+                .then(value => {
+                    console.log('then', value);
+                    parseSendResponse(value);
+                    resolve(value);
+                }).catch(reason => {
+                console.log('catch', reason)
+                parseSendError(reason);
+                reject(reason);
+            }).finally(() => {
+                clearRequest();
+            });
         });
     };
 
@@ -175,12 +185,15 @@ const rpc = (function () {
                 const id = body?.id ? '' + body.id : null;
                 const success = typeof v?.success === 'function' ? v.success : null;
                 const fail = typeof v?.fail === 'function' ? v.fail : null;
+                let data = {
+                    method: body.method,
+                    params: body.params
+                };
+                if (id) {
+                    data['id'] = id;
+                }
                 _requests.push({
-                    body: {
-                        method: body.method,
-                        params: body.params,
-                        id: id
-                    },
+                    body: data,
                     success: success,
                     fail: fail
                 });
@@ -191,9 +204,10 @@ const rpc = (function () {
          *
          * @param {String} endpoint Endpoint
          * @param {Object} [config]
+         * @return {Promise<*>}
          */
         send: function (endpoint, config) {
-            send(endpoint, config);
+            return send(endpoint, config);
         },
         clearRequest: function () {
             clearRequest();

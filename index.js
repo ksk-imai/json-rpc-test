@@ -1,6 +1,5 @@
 (function () {
-    rpc.setFetchConfig({})
-        .debug();
+    rpc.setFetchConfig({}).debug();
 
     const sampleRequest = [
         {
@@ -62,9 +61,14 @@
         const $this = ev.currentTarget;
         const action = $this?.action;
         const method = $this?.method;
-        console.log(method, action);
         rpc.addRequests(sampleRequest)
-            .send(action, {method: method});
+            .send(action, {method: method})
+            .then(res => {
+                console.log(`then ${method} ${action}`, res);
+            })
+            .catch(err => {
+                console.log(`catch ${method} ${action}`, err);
+            });
     };
 
     // event bind
