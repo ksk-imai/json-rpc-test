@@ -4,7 +4,7 @@ namespace JsonRpc\Exception;
 
 use Throwable;
 
-class AbstractJsonRpcException extends \Exception
+abstract class AbstractJsonRpcException extends \Exception
 {
     protected $code = 0;
     protected $message = '';
