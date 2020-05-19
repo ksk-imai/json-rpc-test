@@ -1,4 +1,6 @@
 (function () {
+    'use strict';
+
     rpc.setFetchConfig({}).debug();
 
     const sampleRequest = [

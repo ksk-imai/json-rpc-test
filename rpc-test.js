@@ -1,4 +1,6 @@
 const rpc = (function () {
+    'use strict';
+
     /**
      *
      * @type {Object[]}
